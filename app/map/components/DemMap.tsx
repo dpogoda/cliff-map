@@ -16,6 +16,7 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCliffs, setShowCliffs] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(true);
   const [cliffIntensity, setCliffIntensity] = useState(0.8);
   const [elevation, setElevation] = useState<number | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -59,9 +60,9 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
             }
           ]
         },
-        center: [location.lon, location.lat],
-        zoom: 11, // Zoom in to see COG tile clearly
-        pitch: 0, // Start flat to see raster overlay
+        center: [12.5, 55.5], // Baltic/North Sea region
+        zoom: 6,
+        pitch: 45,
         bearing: 0,
       });
 
@@ -118,11 +119,11 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
             type: 'hillshade',
             source: 'terrain-dem',
             paint: {
-              'hillshade-shadow-color': '#ff0000',  // Red for steep shadows
-              'hillshade-highlight-color': 'rgba(255, 100, 100, 0.3)', // Light red highlights
-              'hillshade-accent-color': '#cc0000',  // Dark red accent
-              'hillshade-illumination-direction': 270, // Light from west to catch east-facing cliffs
-              'hillshade-exaggeration': 1.0, // Maximum exaggeration
+              'hillshade-shadow-color': '#ff0000',
+              'hillshade-highlight-color': 'rgba(255, 100, 100, 0.3)',
+              'hillshade-accent-color': '#cc0000',
+              'hillshade-illumination-direction': 270,
+              'hillshade-exaggeration': 1.0,
             },
           });
 
@@ -135,7 +136,7 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
               'hillshade-shadow-color': 'rgba(255, 50, 0, 0.6)',
               'hillshade-highlight-color': 'rgba(0, 0, 0, 0)',
               'hillshade-accent-color': '#ff3300',
-              'hillshade-illumination-direction': 90, // Light from east
+              'hillshade-illumination-direction': 90,
               'hillshade-exaggeration': 1.0,
             },
           });
@@ -284,6 +285,56 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
           Red = steep slopes (potential cliffs)
         </p>
       </div>
+
+      {/* Tutorial overlay */}
+      {showTutorial && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-md mx-4 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <h2 className="text-xl font-bold text-white">Welcome to Cliff Finder</h2>
+              <p className="text-blue-100 text-sm">Explore terrain and discover steep coastal cliffs</p>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">1</div>
+                <div>
+                  <p className="font-medium">Navigate the map</p>
+                  <p className="text-sm text-zinc-500">Drag to pan, scroll to zoom, right-drag to rotate</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">2</div>
+                <div>
+                  <p className="font-medium">View elevation</p>
+                  <p className="text-sm text-zinc-500">Move your mouse to see height in meters</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold shrink-0">3</div>
+                <div>
+                  <p className="font-medium">Find steep slopes</p>
+                  <p className="text-sm text-zinc-500">Enable "Show Steep Slopes" to highlight cliffs in red</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold shrink-0">4</div>
+                <div>
+                  <p className="font-medium">Quick locations</p>
+                  <p className="text-sm text-zinc-500">Use buttons to fly to famous coastal cliffs or mountains</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-zinc-50 dark:bg-zinc-800">
+              <button
+                onClick={() => setShowTutorial(false)}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Start Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Elevation display */}
       <div className="absolute bottom-20 left-4 bg-white dark:bg-zinc-900 px-4 py-3 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700">
