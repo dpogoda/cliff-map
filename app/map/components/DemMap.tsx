@@ -15,9 +15,10 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
   const map = useRef<maplibregl.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cogLoaded, setCogLoaded] = useState(false);
   const [showCliffs, setShowCliffs] = useState(true);
   const [cliffIntensity, setCliffIntensity] = useState(0.8);
+  const [elevation, setElevation] = useState<number | null>(null);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   // Register COG protocol once on component mount
   useEffect(() => {
@@ -140,7 +141,6 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
           });
 
           console.log('Terrain and cliff highlighting enabled');
-          setCogLoaded(true);
         } catch (err) {
           console.error('Error adding terrain:', err);
           setError('Failed to load terrain: ' + (err instanceof Error ? err.message : String(err)));
@@ -149,6 +149,21 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
 
       mapInstance.on('error', (e) => {
         console.error('Map error:', e.error?.message || e.error || e);
+      });
+
+      // Track mouse movement to show elevation
+      mapInstance.on('mousemove', (e) => {
+        const elev = mapInstance.queryTerrainElevation(e.lngLat);
+        if (elev !== null) {
+          setElevation(Math.round(elev));
+          setCoordinates({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+        }
+      });
+
+      // Clear elevation when mouse leaves map
+      mapInstance.on('mouseout', () => {
+        setElevation(null);
+        setCoordinates(null);
       });
 
       map.current = mapInstance;
@@ -270,11 +285,30 @@ export default function DemMap({ initialLocation = 'alps' }: DemMapProps) {
         </p>
       </div>
 
+      {/* Elevation display */}
+      <div className="absolute bottom-20 left-4 bg-white dark:bg-zinc-900 px-4 py-3 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700">
+        <div className="flex items-center gap-4">
+          <div>
+            <p className="text-xs text-zinc-500 uppercase tracking-wide">Elevation</p>
+            <p className="text-2xl font-bold font-mono">
+              {elevation !== null ? `${elevation}m` : '—'}
+            </p>
+          </div>
+          {coordinates && (
+            <div className="border-l border-zinc-200 dark:border-zinc-700 pl-4">
+              <p className="text-xs text-zinc-500">Coordinates</p>
+              <p className="text-xs font-mono">
+                {coordinates.lat.toFixed(4)}°, {coordinates.lng.toFixed(4)}°
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Attribution */}
       <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-zinc-900/90 px-3 py-2 rounded text-xs max-w-md">
         <p className="text-zinc-700 dark:text-zinc-300">
-          © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018
-          provided under COPERNICUS by the European Union and ESA
+          Terrain: AWS Terrain Tiles
         </p>
       </div>
     </div>
